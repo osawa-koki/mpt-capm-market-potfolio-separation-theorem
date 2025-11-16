@@ -3,23 +3,23 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 
 export interface InvestmentSettings {
-  totalAssets: number // 資産総額
-  investmentRatio: number // 投資比率 (0-100)
-  probabilityThreshold: number // 何%の可能性まで考慮するか (0-100)
-  expectedReturn: number // リターン (%)
-  risk: number // リスク (%)
+  riskFreeRate: number // リスクフリーレート (%)
+  numberOfAssets: number // シミュレーションに使用する資産数
+  correlationCoefficient: number // 資産間の相関係数 (-1 to 1)
+  expectedReturn: number // マーケットポートフォリオの期待リターン (%)
+  risk: number // マーケットポートフォリオのリスク (標準偏差 %)
 }
 
-const DEFAULT_TOTAL_ASSETS = 1_000_000
-const DEFAULT_INVESTMENT_RATIO = 50
-const DEFAULT_PROBABILITY_THRESHOLD = 99.5
+const DEFAULT_RISK_FREE_RATE = 0.5
+const DEFAULT_NUMBER_OF_ASSETS = 2
+const DEFAULT_CORRELATION_COEFFICIENT = 0.3
 const DEFAULT_EXPECTED_RETURN = 7.5
 const DEFAULT_RISK = 18.0
 
 export const defaultSettings: InvestmentSettings = {
-  totalAssets: DEFAULT_TOTAL_ASSETS,
-  investmentRatio: DEFAULT_INVESTMENT_RATIO,
-  probabilityThreshold: DEFAULT_PROBABILITY_THRESHOLD,
+  riskFreeRate: DEFAULT_RISK_FREE_RATE,
+  numberOfAssets: DEFAULT_NUMBER_OF_ASSETS,
+  correlationCoefficient: DEFAULT_CORRELATION_COEFFICIENT,
   expectedReturn: DEFAULT_EXPECTED_RETURN,
   risk: DEFAULT_RISK
 }
@@ -32,7 +32,7 @@ interface SettingsContextType {
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined)
 
-const STORAGE_KEY = 'investment-settings'
+const STORAGE_KEY = 'mpt-capm-settings'
 
 export function SettingsProvider ({ children }: { children: React.ReactNode }): React.JSX.Element {
   const [settings, setSettings] = useState<InvestmentSettings>(defaultSettings)

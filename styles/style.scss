@@ -158,3 +158,111 @@ footer {
     color: #333;
   }
 }
+
+// Settings page styles
+#Settings {
+  h1 {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #16a085;
+    border-bottom: 3px solid #1abc9c;
+    padding-bottom: 0.5rem;
+  }
+
+  h5 {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .card {
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    .card-body {
+      padding: 1.5rem;
+    }
+  }
+
+  .alert-warning {
+    border-left: 4px solid #f39c12;
+    background-color: #fff8e1;
+
+    .alert-heading {
+      color: #e67e22;
+      font-size: 1.1rem;
+    }
+  }
+
+  .alert-info {
+    border-left: 4px solid #3498db;
+    background-color: #e8f4f8;
+
+    .alert-heading {
+      color: #2980b9;
+      font-size: 1.1rem;
+    }
+
+    ul {
+      margin-top: 0.5rem;
+      padding-left: 1.5rem;
+
+      li {
+        margin-bottom: 0.3rem;
+      }
+    }
+  }
+
+  .alert-secondary {
+    background-color: #f8f9fa;
+    border-left: 4px solid #6c757d;
+
+    small {
+      line-height: 1.6;
+    }
+  }
+
+  .form-label {
+    font-weight: 600;
+    color: #34495e;
+    margin-bottom: 0.5rem;
+  }
+
+  .form-text {
+    font-size: 0.875rem;
+    color: #6c757d;
+  }
+
+  .form-control {
+    border-radius: 0.375rem;
+    border: 1px solid #ced4da;
+
+    &:focus {
+      border-color: #1abc9c;
+      box-shadow: 0 0 0 0.2rem rgba(26, 188, 156, 0.25);
+    }
+  }
+
+  .btn-primary {
+    background-color: #1abc9c;
+    border-color: #1abc9c;
+
+    &:hover {
+      background-color: #16a085;
+      border-color: #16a085;
+    }
+  }
+
+  ul {
+    li {
+      margin-bottom: 0.5rem;
+      line-height: 1.8;
+
+      strong {
+        color: #2980b9;
+      }
+    }
+  }
+}
