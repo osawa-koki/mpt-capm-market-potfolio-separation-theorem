@@ -18,26 +18,29 @@ interface Term {
 
 const terms: Term[] = [
   {
-    id: 'mean',
-    title: '平均（期待値）',
-    description: '投資における平均（期待値）とは、将来得られると予想される資産額の平均的な値を指します。このアプリケーションでは、初期投資額に期待リターン率を複利で適用して計算されます。例えば、100万円を年率7.5%で10年間運用した場合、平均的には約206万円になると期待されます。これは最も起こりやすい結果の目安となりますが、実際の結果はリスク（標準偏差）によって上下にばらつきます。'
-  },
-  {
-    id: 'stddev',
-    title: '標準偏差',
-    description: '標準偏差は、投資のリスク（不確実性）を数値化したものです。具体的には、将来の資産額が平均からどの程度ばらつくかを示します。標準偏差が大きいほど、結果の変動幅が大きくなります。正規分布を仮定すると、約68%の確率で「平均±1標準偏差」の範囲に、約95%の確率で「平均±2標準偏差」の範囲に結果が収まります。例えば、100万円を年率10%のリターンと15%のリスクの資産に1年間投資した場合、平均は110万円（100万円×1.10）、標準偏差は約16.5万円（110万円×0.15）となります。つまり、約68%の確率で93.5万円〜126.5万円の範囲に、約95%の確率で77万円〜143万円の範囲に結果が収まると予想されます。このアプリケーションでは、年間リスク率と投資期間から標準偏差を計算しています。'
-  },
-  {
-    id: 'confidence-interval',
-    title: '95%信頼区間',
-    description: '95%信頼区間とは、将来の資産額が95%の確率で収まる範囲を示します。正規分布を仮定すると、平均±1.96標準偏差の範囲が95%信頼区間となります。例えば、10年後の資産の平均が200万円、標準偏差が50万円の場合、95%信頼区間は約102万円〜298万円となります。つまり、95%の確率でこの範囲内に資産額が収まり、残りの5%（上下各2.5%）の確率で範囲外になることを意味します。投資の不確実性を理解するための重要な指標です。'
-  },
-  {
     id: 'mpt',
     title: 'MPT（現代ポートフォリオ理論）',
     description: (
       <>
-        MPT（Modern Portfolio Theory、現代ポートフォリオ理論）は、ハリー・マーコウィッツが1952年に提唱した投資理論です。リスクとリターンのトレードオフを数学的に分析し、効率的なポートフォリオ（資産の組み合わせ）を構築する方法を示します。主要な概念として、分散投資によってリスクを低減できることや、リスク許容度に応じた最適な資産配分が存在することが挙げられます。<Link href="/words?q=tobin-separation" style={{ textDecoration: 'none' }}>トービンの分離定理</Link>は、このMPTの重要な拡張理論の一つです。
+        MPT（Modern Portfolio Theory、現代ポートフォリオ理論）は、ハリー・マーコウィッツが1952年に提唱した投資理論です。リスクとリターンのトレードオフを数学的に分析し、効率的なポートフォリオ（資産の組み合わせ）を構築する方法を示します。主要な概念として、分散投資によってリスクを低減できることや、リスク許容度に応じた最適な資産配分が存在することが挙げられます。<Link href="/words?q=efficient-frontier" style={{ textDecoration: 'none' }}>効率的フロンティア</Link>と<Link href="/words?q=tobin-separation" style={{ textDecoration: 'none' }}>トービンの分離定理</Link>は、このMPTの重要な概念です。
+      </>
+    )
+  },
+  {
+    id: 'capm',
+    title: 'CAPM（資本資産価格モデル）',
+    description: (
+      <>
+        CAPM（Capital Asset Pricing Model、資本資産価格モデル）は、ウィリアム・シャープらが1960年代に開発した資産価格決定理論です。<Link href="/words?q=mpt" style={{ textDecoration: 'none' }}>MPT</Link>を拡張したもので、リスク資産の期待リターンを理論的に算出します。CAPMでは、すべての投資家が<Link href="/words?q=market-portfolio" style={{ textDecoration: 'none' }}>マーケット・ポートフォリオ</Link>と<Link href="/words?q=risk-free-rate" style={{ textDecoration: 'none' }}>リスクフリー資産</Link>を組み合わせて保有し、<Link href="/words?q=cml" style={{ textDecoration: 'none' }}>資本市場線（CML）</Link>上でポートフォリオを選択すると仮定します。
+      </>
+    )
+  },
+  {
+    id: 'efficient-frontier',
+    title: '効率的フロンティア',
+    description: (
+      <>
+        効率的フロンティア（Efficient Frontier）は、同じリスクレベルで最大のリターンを提供する、または同じリターンレベルで最小のリスクを提供するポートフォリオの集合を表す曲線です。<Link href="/words?q=mpt" style={{ textDecoration: 'none' }}>現代ポートフォリオ理論（MPT）</Link>の中心的な概念で、この曲線より左上のポートフォリオは理論上実現不可能です。複数の資産を組み合わせることで、個別資産よりも効率的な（リスク対リターンの比率が良い）ポートフォリオを構築できることを示しています。
       </>
     )
   },
@@ -46,7 +49,16 @@ const terms: Term[] = [
     title: 'マーケット・ポートフォリオ',
     description: (
       <>
-        マーケット・ポートフォリオ（Market Portfolio）は、市場に存在するすべてのリスク資産を、その時価総額に比例した割合で保有するポートフォリオです。<Link href="/words?q=mpt" style={{ textDecoration: 'none' }}>現代ポートフォリオ理論（MPT）</Link>において、最も効率的なリスク資産の組み合わせとされています。実務上は、世界株式インデックスファンドなどの幅広く分散されたポートフォリオがマーケット・ポートフォリオの近似として用いられます。<Link href="/words?q=tobin-separation" style={{ textDecoration: 'none' }}>トービンの分離定理</Link>では、すべての投資家は個人のリスク許容度に関わらず、同じマーケット・ポートフォリオを保有すべきだとされています。
+        マーケット・ポートフォリオ（Market Portfolio）は、<Link href="/words?q=efficient-frontier" style={{ textDecoration: 'none' }}>効率的フロンティア</Link>上で<Link href="/words?q=sharpe-ratio" style={{ textDecoration: 'none' }}>シャープレシオ</Link>が最大となるポートフォリオです。<Link href="/words?q=capm" style={{ textDecoration: 'none' }}>CAPM</Link>理論では、すべての投資家は個人のリスク許容度に関わらず、同じマーケット・ポートフォリオを保有すべきだとされています。実務上は、世界株式インデックスファンドなどの幅広く分散されたポートフォリオがマーケット・ポートフォリオの近似として用いられます。
+      </>
+    )
+  },
+  {
+    id: 'cml',
+    title: '資本市場線（CML）',
+    description: (
+      <>
+        資本市場線（Capital Market Line、CML）は、<Link href="/words?q=risk-free-rate" style={{ textDecoration: 'none' }}>リスクフリー資産</Link>と<Link href="/words?q=market-portfolio" style={{ textDecoration: 'none' }}>マーケット・ポートフォリオ</Link>を組み合わせることで実現可能なリスク・リターンの組み合わせを示す直線です。<Link href="/words?q=capm" style={{ textDecoration: 'none' }}>CAPM</Link>では、すべての合理的な投資家はこの線上のどこかのポートフォリオを選択すべきだとされます。CML上の任意の点は、リスクフリー資産とマーケット・ポートフォリオの異なる配分比率を表しています。
       </>
     )
   },
@@ -55,7 +67,57 @@ const terms: Term[] = [
     title: 'トービンの分離定理',
     description: (
       <>
-        トービンの分離定理（Tobin&apos;s Separation Theorem）は、ジェームズ・トービンが提唱したポートフォリオ理論の重要な定理です。この定理によれば、投資家のリスク許容度に応じた資産配分は、「<Link href="/words?q=market-portfolio" style={{ textDecoration: 'none' }}>マーケット・ポートフォリオ</Link>」と「無リスク資産（現金など）」の2つに分離できます。つまり、リスクを調整したい場合、リスク資産の中身を変更するのではなく、マーケット・ポートフォリオと無リスク資産の配分比率を変えるべきだということです。このアプリケーションでは、投資比率を下げる（無リスク資産の比率を上げる）ことが、リスク・リターンの組み合わせを変えずにリスクを下げる推奨方法として説明されています。
+        トービンの分離定理（Tobin&apos;s Separation Theorem）は、ジェームズ・トービンが提唱したポートフォリオ理論の重要な定理です。投資決定は2つのステップに分離できると述べています：（1）最適なリスク資産ポートフォリオ（<Link href="/words?q=market-portfolio" style={{ textDecoration: 'none' }}>マーケット・ポートフォリオ</Link>）を決定する、（2）個人のリスク許容度に応じて、<Link href="/words?q=risk-free-rate" style={{ textDecoration: 'none' }}>リスクフリー資産</Link>とマーケット・ポートフォリオの配分比率を決定する。つまり、リスク選好度が異なる投資家でも、同じマーケット・ポートフォリオを保有し、配分比率だけを変えれば良いということです。
+      </>
+    )
+  },
+  {
+    id: 'risk-free-rate',
+    title: 'リスクフリーレート（無リスク利子率）',
+    description: (
+      <>
+        リスクフリーレート（Risk-Free Rate）は、理論上リスクがゼロの資産から得られる利回りのことです。実務上は、自国通貨建ての短期国債の利回りが使用されます（日本の場合は日本国債、米国の場合は米国債）。<Link href="/words?q=capm" style={{ textDecoration: 'none' }}>CAPM</Link>や<Link href="/words?q=sharpe-ratio" style={{ textDecoration: 'none' }}>シャープレシオ</Link>の計算において、超過リターン（リスクプレミアム）を算出するための基準値として使用されます。
+      </>
+    )
+  },
+  {
+    id: 'expected-return',
+    title: '期待リターン',
+    description: '期待リターン（Expected Return）は、資産やポートフォリオから将来得られると予想される平均的な収益率です。過去のデータや経済予測に基づいて推定されます。リスクが高い資産ほど、一般的に期待リターンも高くなる傾向があります（リスク・リターンのトレードオフ）。このアプリケーションでは、各資産の期待リターンを年率（%）で設定します。'
+  },
+  {
+    id: 'risk',
+    title: 'リスク（標準偏差）',
+    description: (
+      <>
+        投資におけるリスク（Risk）は、リターンの不確実性や変動性を指し、通常は標準偏差で測定されます。標準偏差が大きいほど、リターンのばらつきが大きく、投資結果の予測が困難になります。正規分布を仮定すると、約68%の確率で期待リターン±1標準偏差の範囲に実際のリターンが収まります。<Link href="/words?q=mpt" style={{ textDecoration: 'none' }}>MPT</Link>では、複数資産の組み合わせによってポートフォリオ全体のリスクを低減できることが示されています。
+      </>
+    )
+  },
+  {
+    id: 'sharpe-ratio',
+    title: 'シャープレシオ',
+    description: (
+      <>
+        シャープレシオ（Sharpe Ratio）は、リスク1単位あたりの超過リターン（<Link href="/words?q=risk-free-rate" style={{ textDecoration: 'none' }}>リスクフリーレート</Link>を上回るリターン）を示す指標です。計算式は「（期待リターン - リスクフリーレート）/ リスク（標準偏差）」です。シャープレシオが高いほど、リスクに対するリターンが効率的であることを意味します。<Link href="/words?q=market-portfolio" style={{ textDecoration: 'none' }}>マーケット・ポートフォリオ</Link>は、<Link href="/words?q=efficient-frontier" style={{ textDecoration: 'none' }}>効率的フロンティア</Link>上でシャープレシオが最大となる点として定義されます。
+      </>
+    )
+  },
+  {
+    id: 'correlation',
+    title: '相関係数',
+    description: (
+      <>
+        相関係数（Correlation Coefficient）は、2つの資産の価格変動がどの程度連動するかを示す指標で、-1から1の範囲の値を取ります。1に近いほど正の相関（同じ方向に動く）、-1に近いほど負の相関（逆方向に動く）、0に近いほど無相関（関係がない）を意味します。<Link href="/words?q=mpt" style={{ textDecoration: 'none' }}>MPT</Link>では、相関係数が1未満の資産を組み合わせることで、ポートフォリオ全体のリスクを個別資産よりも低減できることが示されています。このアプリケーションでは、簡略化のため、すべての資産ペアに同じ相関係数を使用しています。
+      </>
+    )
+  },
+  {
+    id: 'diversification',
+    title: '分散投資',
+    description: (
+      <>
+        分散投資（Diversification）は、複数の異なる資産に投資することでリスクを低減する投資戦略です。<Link href="/words?q=mpt" style={{ textDecoration: 'none' }}>現代ポートフォリオ理論（MPT）</Link>の核心的な考え方で、相関が完全ではない（<Link href="/words?q=correlation" style={{ textDecoration: 'none' }}>相関係数</Link>が1未満の）資産を組み合わせることで、ポートフォリオ全体のリスクを個別資産の単純平均よりも低く抑えることができます。「すべての卵を一つのかごに盛るな」という格言で表現されます。
       </>
     )
   }
@@ -88,7 +150,8 @@ export default function WordsPage (): React.JSX.Element {
     <Container className="py-5">
       <h1 className="mb-4">📚 用語集</h1>
       <p className="mb-4">
-        投資シミュレーションで使用される用語について解説します。
+        MPT（現代ポートフォリオ理論）とCAPM（資本資産価格モデル）に関連する主要な用語を解説します。
+        用語は相互にリンクされており、クリックすることで関連する用語にジャンプできます。
       </p>
 
       {terms.map((term) => (
