@@ -2,26 +2,47 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 
+export interface IndividualAsset {
+  id: string // 一意のID
+  name: string // 資産名
+  expectedReturn: number // 期待リターン (%)
+  risk: number // リスク - 標準偏差 (%)
+}
+
 export interface InvestmentSettings {
   riskFreeRate: number // リスクフリーレート (%)
-  numberOfAssets: number // シミュレーションに使用する資産数
   correlationCoefficient: number // 資産間の相関係数 (-1 to 1)
-  expectedReturn: number // マーケットポートフォリオの期待リターン (%)
-  risk: number // マーケットポートフォリオのリスク (標準偏差 %)
+  assets: IndividualAsset[] // 個別資産の配列
 }
 
 const DEFAULT_RISK_FREE_RATE = 0.5
-const DEFAULT_NUMBER_OF_ASSETS = 2
 const DEFAULT_CORRELATION_COEFFICIENT = 0.3
-const DEFAULT_EXPECTED_RETURN = 7.5
-const DEFAULT_RISK = 18.0
+
+// デフォルト資産の定数
+const ASSET_A_RETURN = 8.0
+const ASSET_A_RISK = 15.0
+const ASSET_B_RETURN = 10.0
+const ASSET_B_RISK = 20.0
+const ASSET_C_RETURN = 6.0
+const ASSET_C_RISK = 12.0
+const ASSET_D_RETURN = 12.0
+const ASSET_D_RISK = 25.0
+const ASSET_E_RETURN = 7.0
+const ASSET_E_RISK = 16.0
+
+// デフォルトの個別資産（5つ）
+const createDefaultAssets = (): IndividualAsset[] => [
+  { id: '1', name: '資産A', expectedReturn: ASSET_A_RETURN, risk: ASSET_A_RISK },
+  { id: '2', name: '資産B', expectedReturn: ASSET_B_RETURN, risk: ASSET_B_RISK },
+  { id: '3', name: '資産C', expectedReturn: ASSET_C_RETURN, risk: ASSET_C_RISK },
+  { id: '4', name: '資産D', expectedReturn: ASSET_D_RETURN, risk: ASSET_D_RISK },
+  { id: '5', name: '資産E', expectedReturn: ASSET_E_RETURN, risk: ASSET_E_RISK }
+]
 
 export const defaultSettings: InvestmentSettings = {
   riskFreeRate: DEFAULT_RISK_FREE_RATE,
-  numberOfAssets: DEFAULT_NUMBER_OF_ASSETS,
   correlationCoefficient: DEFAULT_CORRELATION_COEFFICIENT,
-  expectedReturn: DEFAULT_EXPECTED_RETURN,
-  risk: DEFAULT_RISK
+  assets: createDefaultAssets()
 }
 
 interface SettingsContextType {

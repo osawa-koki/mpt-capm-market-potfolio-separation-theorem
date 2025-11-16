@@ -18,11 +18,15 @@ export default function Home (): React.JSX.Element {
   const basePath = setting.basePath ?? ''
   const logoSrc = `${basePath}/tako.png`
 
-  // シャープレシオを計算
-  const sharpeRatio = useMemo(() => {
-    if (settings.risk === ZERO) return ZERO
-    return (settings.expectedReturn - settings.riskFreeRate) / settings.risk
-  }, [settings.expectedReturn, settings.riskFreeRate, settings.risk])
+  // 各資産の平均シャープレシオを計算
+  const averageSharpeRatio = useMemo(() => {
+    if (settings.assets.length === ZERO) return ZERO
+    const sum = settings.assets.reduce((acc, asset) => {
+      if (asset.risk === ZERO) return acc
+      return acc + (asset.expectedReturn - settings.riskFreeRate) / asset.risk
+    }, ZERO)
+    return sum / settings.assets.length
+  }, [settings.assets, settings.riskFreeRate])
 
   return (
     <Container className='py-4'>
@@ -47,31 +51,27 @@ export default function Home (): React.JSX.Element {
                 <p className='mb-2'>
                   <strong>リスクフリーレート:</strong> {settings.riskFreeRate}%
                 </p>
-                <p className='mb-2'>
-                  <strong>資産数:</strong> {settings.numberOfAssets}
-                </p>
-              </Col>
-              <Col md={6}>
-                <p className='mb-2'>
+                <p className='mb-0'>
                   <strong>相関係数:</strong> {settings.correlationCoefficient}
-                </p>
-              </Col>
-            </Row>
-
-            <h6 className='mb-3'>マーケットポートフォリオ</h6>
-            <Row className='mb-4'>
-              <Col md={6}>
-                <p className='mb-2'>
-                  <strong>期待リターン:</strong> {settings.expectedReturn}% / 年
-                </p>
-                <p className='mb-2'>
-                  <strong>リスク:</strong> {settings.risk}% / 年
                 </p>
               </Col>
               <Col md={6}>
                 <p className='mb-0'>
-                  <strong>シャープレシオ:</strong> {sharpeRatio.toFixed(DECIMAL_PLACES)}
+                  <strong>平均シャープレシオ:</strong> {averageSharpeRatio.toFixed(DECIMAL_PLACES)}
                 </p>
+              </Col>
+            </Row>
+
+            <h6 className='mb-3'>個別資産</h6>
+            <Row className='mb-4'>
+              <Col md={12}>
+                <ul className='mb-0'>
+                  {settings.assets.map(asset => (
+                    <li key={asset.id}>
+                      <strong>{asset.name}</strong>: 期待リターン {asset.expectedReturn}% / 年、リスク {asset.risk}% / 年
+                    </li>
+                  ))}
+                </ul>
               </Col>
             </Row>
 
