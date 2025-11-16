@@ -1,0 +1,57 @@
+{
+  "name": "mpt-capm-market-potfolio-separation-theorem",
+  "description": "mpt-capm-market-potfolio-separation-theorem",
+  "author": "osawa-koki",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/osawa-koki/mpt-capm-market-potfolio-separation-theorem.git"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=10.0.0"
+  },
+  "private": false,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port 8000",
+    "build": "next build",
+    "test": "playwright test",
+    "lint": "eslint --ext .ts,.tsx,.js,.jsx .",
+    "lint:fix": "eslint --fix --ext .ts,.tsx,.js,.jsx .",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@types/node": "^24.10.1",
+    "bootstrap": "^5.3.8",
+    "chart.js": "^4.5.1",
+    "chartjs-plugin-annotation": "^3.1.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.3",
+    "jspdf-autotable": "^5.0.2",
+    "next": "^16.0.3",
+    "react": "^18.3.1",
+    "react-bootstrap": "^2.10.10",
+    "react-chartjs-2": "^5.3.1",
+    "react-dom": "^18.3.1",
+    "react-icons": "^5.5.0",
+    "react-modal": "^3.16.3",
+    "react-toastify": "^11.0.5",
+    "sass": "^1.94.0",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@next/eslint-plugin-next": "^16.0.3",
+    "@playwright/test": "^1.56.1",
+    "@types/bootstrap": "^5.2.10",
+    "@types/react": "^18.3.13",
+    "@types/react-bootstrap": "^1.1.0",
+    "@types/react-dom": "^18.3.1",
+    "@types/react-modal": "^3.16.3",
+    "@typescript-eslint/eslint-plugin": "^8.46.4",
+    "@typescript-eslint/parser": "^8.46.4",
+    "eslint": "^9.39.1",
+    "eslint-config-love": "^133.0.0",
+    "eslint-plugin-react": "^7.37.5"
+  }
+}
