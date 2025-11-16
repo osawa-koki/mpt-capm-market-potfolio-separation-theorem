@@ -85,6 +85,9 @@ export default function Home (): React.JSX.Element {
               <Link href='/about'>
                 <Button variant='info'>理論について学ぶ</Button>
               </Link>
+              <Link href='/summary'>
+                <Button variant='warning'>実践的な投資戦略</Button>
+              </Link>
             </div>
           </Card.Body>
         </Card>

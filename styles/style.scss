@@ -266,3 +266,112 @@ footer {
     }
   }
 }
+
+// Summary page styles
+#Summary {
+  h1 {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #27ae60;
+    border-bottom: 3px solid #2ecc71;
+    padding-bottom: 0.5rem;
+  }
+
+  h5 {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 2px solid #3498db;
+  }
+
+  h6 {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #34495e;
+    margin-top: 1rem;
+  }
+
+  .card {
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    &.border-success {
+      border-left: 4px solid #27ae60;
+    }
+
+    &.border-danger {
+      border-left: 4px solid #e74c3c;
+    }
+  }
+
+  .alert-success {
+    border-left: 4px solid #27ae60;
+    background-color: #d5f4e6;
+
+    .alert-heading {
+      color: #27ae60;
+      font-size: 1.2rem;
+    }
+  }
+
+  .alert-warning {
+    border-left: 4px solid #f39c12;
+    background-color: #fff8e1;
+
+    .alert-heading {
+      color: #e67e22;
+      font-size: 1.1rem;
+    }
+  }
+
+  .alert-info {
+    border-left: 4px solid #3498db;
+    background-color: #e8f4f8;
+
+    ul {
+      margin-top: 0.5rem;
+      padding-left: 1.5rem;
+
+      li {
+        margin-bottom: 0.3rem;
+      }
+    }
+  }
+
+  .alert-danger {
+    border-left: 4px solid #e74c3c;
+    background-color: #fadbd8;
+  }
+
+  ul, ol {
+    line-height: 1.8;
+
+    li {
+      margin-bottom: 0.5rem;
+
+      strong {
+        color: #2980b9;
+      }
+    }
+  }
+
+  p {
+    line-height: 1.8;
+    color: #333;
+  }
+
+  .text-success {
+    color: #27ae60;
+  }
+
+  .text-danger {
+    color: #e74c3c;
+  }
+}
