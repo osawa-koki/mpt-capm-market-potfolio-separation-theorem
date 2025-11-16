@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { Container, Form, Button, Card, Row, Col, Alert } from 'react-bootstrap'
 import { toast } from 'react-toastify'
 
-import { useSettings, type InvestmentSettings, defaultSettings } from '@/contexts/SettingsContext'
+import { useSettings, type InvestmentSettings, type IndividualAsset, defaultSettings } from '@/contexts/SettingsContext'
 import Modal from '@/components/Modal'
 
 const PERCENTAGE_DIVISOR = 100
@@ -13,7 +13,12 @@ const ZERO = 0
 const MIN_CORRELATION = -1
 const MAX_CORRELATION = 1
 const MIN_ASSETS = 2
-const MAX_ASSETS = 10
+const MAX_ASSETS = 20
+const ONE = 1
+const SHARPE_RATIO_DECIMALS = 3
+const CHAR_CODE_A = 65
+const DEFAULT_EXPECTED_RETURN = 8.0
+const DEFAULT_RISK = 15.0
 
 // 未保存の変更警告コンポーネント
 interface UnsavedChangesAlertProps {
@@ -43,10 +48,8 @@ export default function SettingsPage (): React.JSX.Element {
   // 未保存の変更があるかチェック
   const hasUnsavedChanges = useMemo(() => (
     formData.riskFreeRate !== settings.riskFreeRate ||
-    formData.numberOfAssets !== settings.numberOfAssets ||
     formData.correlationCoefficient !== settings.correlationCoefficient ||
-    formData.expectedReturn !== settings.expectedReturn ||
-    formData.risk !== settings.risk
+    JSON.stringify(formData.assets) !== JSON.stringify(settings.assets)
   ), [formData, settings])
 
   // settingsが変更されたらformDataを同期
@@ -69,6 +72,45 @@ export default function SettingsPage (): React.JSX.Element {
     }
   }
 
+  const handleAddAsset = (): void => {
+    const assetIds = formData.assets.map(a => {
+      const parsed = parseInt(a.id, 10)
+      return isNaN(parsed) ? ZERO : parsed
+    })
+    const maxId = Math.max(ZERO, ...assetIds)
+    const newId = String(maxId + ONE)
+    const newAsset: IndividualAsset = {
+      id: newId,
+      name: `資産${String.fromCharCode(CHAR_CODE_A + formData.assets.length)}`,
+      expectedReturn: DEFAULT_EXPECTED_RETURN,
+      risk: DEFAULT_RISK
+    }
+    setFormData(prev => ({
+      ...prev,
+      assets: [...prev.assets, newAsset]
+    }))
+  }
+
+  const handleRemoveAsset = (id: string): void => {
+    if (formData.assets.length <= MIN_ASSETS) {
+      toast.error(`最低${MIN_ASSETS}個の資産が必要です。`)
+      return
+    }
+    setFormData(prev => ({
+      ...prev,
+      assets: prev.assets.filter(a => a.id !== id)
+    }))
+  }
+
+  const handleAssetChange = (id: string, field: keyof IndividualAsset, value: string | number): void => {
+    setFormData(prev => ({
+      ...prev,
+      assets: prev.assets.map(a =>
+        a.id === id ? { ...a, [field]: value } : a
+      )
+    }))
+  }
+
   const handleSubmit = (e: React.FormEvent): void => {
     e.preventDefault()
 
@@ -78,7 +120,7 @@ export default function SettingsPage (): React.JSX.Element {
       return
     }
 
-    if (formData.numberOfAssets < MIN_ASSETS || formData.numberOfAssets > MAX_ASSETS) {
+    if (formData.assets.length < MIN_ASSETS || formData.assets.length > MAX_ASSETS) {
       toast.error(`資産数は${MIN_ASSETS}〜${MAX_ASSETS}の範囲で入力してください。`)
       return
     }
@@ -88,9 +130,16 @@ export default function SettingsPage (): React.JSX.Element {
       return
     }
 
-    if (formData.risk < ZERO) {
-      toast.error('リスクは0以上の値を入力してください。')
-      return
+    // 各資産のバリデーション
+    for (const asset of formData.assets) {
+      if (asset.name.trim() === '') {
+        toast.error('資産名を入力してください。')
+        return
+      }
+      if (asset.risk < ZERO) {
+        toast.error(`${asset.name}: リスクは0以上の値を入力してください。`)
+        return
+      }
     }
 
     // 保存前に丸め処理を適用した値を作成
@@ -98,8 +147,11 @@ export default function SettingsPage (): React.JSX.Element {
       ...formData,
       riskFreeRate: Math.round(formData.riskFreeRate * DECIMAL_PLACES) / DECIMAL_PLACES,
       correlationCoefficient: Math.round(formData.correlationCoefficient * DECIMAL_PLACES) / DECIMAL_PLACES,
-      expectedReturn: Math.round(formData.expectedReturn * DECIMAL_PLACES) / DECIMAL_PLACES,
-      risk: Math.round(formData.risk * DECIMAL_PLACES) / DECIMAL_PLACES
+      assets: formData.assets.map(asset => ({
+        ...asset,
+        expectedReturn: Math.round(asset.expectedReturn * DECIMAL_PLACES) / DECIMAL_PLACES,
+        risk: Math.round(asset.risk * DECIMAL_PLACES) / DECIMAL_PLACES
+      }))
     }
 
     // 丸められた値でformDataも更新
@@ -126,11 +178,11 @@ export default function SettingsPage (): React.JSX.Element {
     setIsResetModalOpen(false)
   }
 
-  // シャープレシオを計算
-  const sharpeRatio = useMemo(() => {
-    if (settings.risk === ZERO) return ZERO
-    return (settings.expectedReturn - settings.riskFreeRate) / settings.risk
-  }, [settings.expectedReturn, settings.riskFreeRate, settings.risk])
+  // 各資産のシャープレシオを計算
+  const calculateAssetSharpeRatio = (expectedReturn: number, risk: number): number => {
+    if (risk === ZERO) return ZERO
+    return (expectedReturn - settings.riskFreeRate) / risk
+  }
 
   return (
     <Container className="py-5" id="Settings">
@@ -167,23 +219,6 @@ export default function SettingsPage (): React.JSX.Element {
                 </Form.Group>
               </Col>
 
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>資産数</Form.Label>
-                  <Form.Control
-                    type="number"
-                    value={formData.numberOfAssets}
-                    onChange={handleChange('numberOfAssets')}
-                    min={MIN_ASSETS}
-                    max={MAX_ASSETS}
-                    step={1}
-                    required
-                  />
-                  <Form.Text className="text-muted">
-                    シミュレーションで使用するリスク資産の数（{MIN_ASSETS}〜{MAX_ASSETS}）
-                  </Form.Text>
-                </Form.Group>
-              </Col>
             </Row>
 
             <Row>
@@ -208,42 +243,87 @@ export default function SettingsPage (): React.JSX.Element {
 
             <hr className="my-4" />
 
-            <h5 className="mb-3">マーケットポートフォリオのパラメータ</h5>
+            <h5 className="mb-3">個別資産の設定</h5>
+            <p className="text-muted mb-3">
+              各資産の期待リターンとリスクを設定します。最低{MIN_ASSETS}個、最大{MAX_ASSETS}個まで設定できます。
+            </p>
 
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>期待リターン (%/年)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    value={formData.expectedReturn}
-                    onChange={handleChange('expectedReturn')}
-                    step={0.1}
-                    required
-                  />
-                  <Form.Text className="text-muted">
-                    マーケットポートフォリオの年間期待リターン（例: 7.5%）
-                  </Form.Text>
-                </Form.Group>
-              </Col>
+            {formData.assets.map(asset => (
+              <Card key={asset.id} className="mb-3">
+                <Card.Body>
+                  <Row className="align-items-center">
+                    <Col md={3}>
+                      <Form.Group className="mb-2">
+                        <Form.Label>資産名</Form.Label>
+                        <Form.Control
+                          type="text"
+                          value={asset.name}
+                          onChange={(e) => { handleAssetChange(asset.id, 'name', e.target.value) }}
+                          required
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={3}>
+                      <Form.Group className="mb-2">
+                        <Form.Label>期待リターン (%)</Form.Label>
+                        <Form.Control
+                          type="number"
+                          value={asset.expectedReturn}
+                          onChange={(e) => {
+                            const parsed = parseFloat(e.target.value)
+                            handleAssetChange(asset.id, 'expectedReturn', isNaN(parsed) ? ZERO : parsed)
+                          }}
+                          step={0.1}
+                          required
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={3}>
+                      <Form.Group className="mb-2">
+                        <Form.Label>リスク (%)</Form.Label>
+                        <Form.Control
+                          type="number"
+                          value={asset.risk}
+                          onChange={(e) => {
+                            const parsed = parseFloat(e.target.value)
+                            handleAssetChange(asset.id, 'risk', isNaN(parsed) ? ZERO : parsed)
+                          }}
+                          min={0}
+                          step={0.1}
+                          required
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={2}>
+                      <Form.Group className="mb-2">
+                        <Form.Label>シャープレシオ</Form.Label>
+                        <div className="fw-bold">{calculateAssetSharpeRatio(asset.expectedReturn, asset.risk).toFixed(SHARPE_RATIO_DECIMALS)}</div>
+                      </Form.Group>
+                    </Col>
+                    <Col md={1}>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => { handleRemoveAsset(asset.id) }}
+                        disabled={formData.assets.length <= MIN_ASSETS}
+                        title={formData.assets.length <= MIN_ASSETS ? `最低${MIN_ASSETS}個の資産が必要です` : '削除'}
+                      >
+                        ×
+                      </Button>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+            ))}
 
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>リスク - 標準偏差 (%/年)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    value={formData.risk}
-                    onChange={handleChange('risk')}
-                    min={0}
-                    step={0.1}
-                    required
-                  />
-                  <Form.Text className="text-muted">
-                    マーケットポートフォリオの年間ボラティリティ（例: 18.0%）
-                  </Form.Text>
-                </Form.Group>
-              </Col>
-            </Row>
+            <Button
+              variant="success"
+              onClick={handleAddAsset}
+              disabled={formData.assets.length >= MAX_ASSETS}
+              className="mb-3"
+            >
+              + 資産を追加
+            </Button>
 
             <Alert variant="info" className="mt-3">
               <Alert.Heading>参考値</Alert.Heading>
@@ -276,15 +356,18 @@ export default function SettingsPage (): React.JSX.Element {
             <Col md={6}>
               <ul>
                 <li>リスクフリーレート: <strong>{settings.riskFreeRate}%</strong></li>
-                <li>資産数: <strong>{settings.numberOfAssets}</strong></li>
                 <li>相関係数: <strong>{settings.correlationCoefficient}</strong></li>
               </ul>
             </Col>
             <Col md={6}>
+              <h6>登録されている資産:</h6>
               <ul>
-                <li>期待リターン: <strong>{settings.expectedReturn}%</strong></li>
-                <li>リスク: <strong>{settings.risk}%</strong></li>
-                <li>シャープレシオ: <strong>{sharpeRatio.toFixed(3)}</strong></li>
+                {settings.assets.map(asset => (
+                  <li key={asset.id}>
+                    <strong>{asset.name}</strong>: リターン {asset.expectedReturn}%, リスク {asset.risk}%
+                    (シャープ: {calculateAssetSharpeRatio(asset.expectedReturn, asset.risk).toFixed(SHARPE_RATIO_DECIMALS)})
+                  </li>
+                ))}
               </ul>
             </Col>
           </Row>
