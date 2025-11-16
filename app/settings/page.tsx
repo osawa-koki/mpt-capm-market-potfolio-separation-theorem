@@ -1,32 +1,19 @@
 'use client'
 
 import React, { useState, useEffect, useMemo } from 'react'
-import { Container, Form, Button, Card, Row, Col, Table, Alert, Collapse } from 'react-bootstrap'
+import { Container, Form, Button, Card, Row, Col, Alert } from 'react-bootstrap'
 import { toast } from 'react-toastify'
-import { BsChevronDown, BsChevronUp } from 'react-icons/bs'
 
 import { useSettings, type InvestmentSettings, defaultSettings } from '@/contexts/SettingsContext'
 import Modal from '@/components/Modal'
 
 const PERCENTAGE_DIVISOR = 100
 const DECIMAL_PLACES = 10
-const MANYEN_MULTIPLIER = 10000
 const ZERO = 0
-const DECIMAL_ONE = 1
-
-// 資産クラスのリターンとリスク定数
-const DOMESTIC_STOCK_RETURN = 5.0
-const DOMESTIC_STOCK_RISK = 15.0
-const DEVELOPED_STOCK_RETURN = 7.0
-const DEVELOPED_STOCK_RISK = 17.0
-const EMERGING_STOCK_RETURN = 8.5
-const EMERGING_STOCK_RISK = 23.0
-const WORLD_STOCK_RETURN = 7.5
-const WORLD_STOCK_RISK = 18.0
-const DOMESTIC_BOND_RETURN = 1.0
-const DOMESTIC_BOND_RISK = 3.0
-const DEVELOPED_BOND_RETURN = 2.5
-const DEVELOPED_BOND_RISK = 5.0
+const MIN_CORRELATION = -1
+const MAX_CORRELATION = 1
+const MIN_ASSETS = 2
+const MAX_ASSETS = 10
 
 // 未保存の変更警告コンポーネント
 interface UnsavedChangesAlertProps {
@@ -36,29 +23,13 @@ interface UnsavedChangesAlertProps {
 function UnsavedChangesAlert ({ className = 'mb-4' }: UnsavedChangesAlertProps): React.JSX.Element {
   return (
     <Alert variant="warning" className={className}>
-      <Alert.Heading>未保存の変更があります。</Alert.Heading>
+      <Alert.Heading>未保存の変更があります</Alert.Heading>
       <p className="mb-0">
         設定を変更しましたが、まだ保存されていません。変更を保存するには「設定を保存」ボタンをクリックしてください。
       </p>
     </Alert>
   )
 }
-
-// 代表的な資産クラスのリターンとリスク
-interface AssetClass {
-  name: string
-  expectedReturn: number
-  risk: number
-}
-
-const assetClasses: AssetClass[] = [
-  { name: '国内株式', expectedReturn: DOMESTIC_STOCK_RETURN, risk: DOMESTIC_STOCK_RISK },
-  { name: '先進国株式', expectedReturn: DEVELOPED_STOCK_RETURN, risk: DEVELOPED_STOCK_RISK },
-  { name: '新興国株式', expectedReturn: EMERGING_STOCK_RETURN, risk: EMERGING_STOCK_RISK },
-  { name: '世界株式', expectedReturn: WORLD_STOCK_RETURN, risk: WORLD_STOCK_RISK },
-  { name: '国内債券', expectedReturn: DOMESTIC_BOND_RETURN, risk: DOMESTIC_BOND_RISK },
-  { name: '先進国債券', expectedReturn: DEVELOPED_BOND_RETURN, risk: DEVELOPED_BOND_RISK }
-]
 
 export default function SettingsPage (): React.JSX.Element {
   const { settings, updateSettings, resetSettings } = useSettings()
@@ -69,14 +40,11 @@ export default function SettingsPage (): React.JSX.Element {
   // モーダル状態
   const [isResetModalOpen, setIsResetModalOpen] = useState(false)
 
-  // 資産クラステーブルの開閉状態
-  const [isAssetClassOpen, setIsAssetClassOpen] = useState(false)
-
   // 未保存の変更があるかチェック
   const hasUnsavedChanges = useMemo(() => (
-    formData.totalAssets !== settings.totalAssets ||
-    formData.investmentRatio !== settings.investmentRatio ||
-    formData.probabilityThreshold !== settings.probabilityThreshold ||
+    formData.riskFreeRate !== settings.riskFreeRate ||
+    formData.numberOfAssets !== settings.numberOfAssets ||
+    formData.correlationCoefficient !== settings.correlationCoefficient ||
     formData.expectedReturn !== settings.expectedReturn ||
     formData.risk !== settings.risk
   ), [formData, settings])
@@ -105,18 +73,18 @@ export default function SettingsPage (): React.JSX.Element {
     e.preventDefault()
 
     // バリデーション
-    if (formData.totalAssets <= ZERO) {
-      toast.error('資産総額は0より大きい値を入力してください。')
+    if (formData.riskFreeRate < ZERO || formData.riskFreeRate > PERCENTAGE_DIVISOR) {
+      toast.error('リスクフリーレートは0〜100の範囲で入力してください。')
       return
     }
 
-    if (formData.investmentRatio < ZERO || formData.investmentRatio > PERCENTAGE_DIVISOR) {
-      toast.error('投資比率は0〜100の範囲で入力してください。')
+    if (formData.numberOfAssets < MIN_ASSETS || formData.numberOfAssets > MAX_ASSETS) {
+      toast.error(`資産数は${MIN_ASSETS}〜${MAX_ASSETS}の範囲で入力してください。`)
       return
     }
 
-    if (formData.probabilityThreshold < ZERO || formData.probabilityThreshold > PERCENTAGE_DIVISOR) {
-      toast.error('確率の閾値は0〜100の範囲で入力してください。')
+    if (formData.correlationCoefficient < MIN_CORRELATION || formData.correlationCoefficient > MAX_CORRELATION) {
+      toast.error('相関係数は-1〜1の範囲で入力してください。')
       return
     }
 
@@ -128,7 +96,8 @@ export default function SettingsPage (): React.JSX.Element {
     // 保存前に丸め処理を適用した値を作成
     const normalizedData: InvestmentSettings = {
       ...formData,
-      probabilityThreshold: Math.round(formData.probabilityThreshold * DECIMAL_PLACES) / DECIMAL_PLACES,
+      riskFreeRate: Math.round(formData.riskFreeRate * DECIMAL_PLACES) / DECIMAL_PLACES,
+      correlationCoefficient: Math.round(formData.correlationCoefficient * DECIMAL_PLACES) / DECIMAL_PLACES,
       expectedReturn: Math.round(formData.expectedReturn * DECIMAL_PLACES) / DECIMAL_PLACES,
       risk: Math.round(formData.risk * DECIMAL_PLACES) / DECIMAL_PLACES
     }
@@ -157,110 +126,81 @@ export default function SettingsPage (): React.JSX.Element {
     setIsResetModalOpen(false)
   }
 
-  const handleApplyAssetClass = (assetClass: AssetClass): void => {
-    setFormData(prev => ({
-      ...prev,
-      expectedReturn: assetClass.expectedReturn,
-      risk: assetClass.risk
-    }))
-    toast.success(`${assetClass.name}のリターンとリスクを適用しました。`)
-  }
-
-  const handleTotalAssetsChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    const inputValue = e.target.value
-    if (inputValue === '') {
-      setFormData(prev => ({ ...prev, totalAssets: ZERO }))
-      return
-    }
-    const value = Number(inputValue)
-    if (!isNaN(value)) {
-      setFormData(prev => ({ ...prev, totalAssets: value * MANYEN_MULTIPLIER }))
-    }
-  }
-
-  // 投資額を計算（リアルタイムで更新）
-  const investmentAmount = formData.totalAssets * formData.investmentRatio / PERCENTAGE_DIVISOR
-  const savedInvestmentAmount = settings.totalAssets * settings.investmentRatio / PERCENTAGE_DIVISOR
+  // シャープレシオを計算
+  const sharpeRatio = useMemo(() => {
+    if (settings.risk === ZERO) return ZERO
+    return (settings.expectedReturn - settings.riskFreeRate) / settings.risk
+  }, [settings.expectedReturn, settings.riskFreeRate, settings.risk])
 
   return (
-    <Container className="py-5">
-      <h1 className="mb-4">⚙️ 投資設定</h1>
+    <Container className="py-5" id="Settings">
+      <h1 className="mb-4">⚙️ パラメータ設定</h1>
+
+      <p className="mb-4 text-muted">
+        MPT・CAPMの可視化に使用するパラメータを設定します。
+        これらの設定は効率的フロンティア、資本市場線、マーケットポートフォリオの計算に使用されます。
+      </p>
 
       {hasUnsavedChanges && <UnsavedChangesAlert />}
 
       <Card>
         <Card.Body>
           <Form onSubmit={handleSubmit}>
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>資産総額 (万円)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    value={formData.totalAssets / MANYEN_MULTIPLIER}
-                    onChange={handleTotalAssetsChange}
-                    min={0}
-                    step={1}
-                    required
-                  />
-                  <Form.Text className="text-muted">
-                    あなたの総資産額を万円単位で入力してください。
-                  </Form.Text>
-                </Form.Group>
-              </Col>
-
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>投資比率 (%)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    value={formData.investmentRatio}
-                    onChange={handleChange('investmentRatio')}
-                    min={0}
-                    max={100}
-                    step={1}
-                    required
-                  />
-                  <Form.Text className="text-muted">
-                    資産のうち何%を投資に回すか (0〜100)。
-                  </Form.Text>
-                </Form.Group>
-              </Col>
-            </Row>
+            <h5 className="mb-3">基本パラメータ</h5>
 
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>投資額 (円)</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={investmentAmount.toLocaleString()}
-                    readOnly
-                    disabled
-                    className="bg-light"
-                  />
-                  <Form.Text className="text-muted">
-                    資産総額 × 投資比率 で自動計算されます。
-                  </Form.Text>
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>確率閾値 (%)</Form.Label>
+                  <Form.Label>リスクフリーレート (%)</Form.Label>
                   <Form.Control
                     type="number"
-                    value={formData.probabilityThreshold}
-                    onChange={handleChange('probabilityThreshold')}
+                    value={formData.riskFreeRate}
+                    onChange={handleChange('riskFreeRate')}
                     min={0}
                     max={100}
                     step={0.1}
                     required
                   />
                   <Form.Text className="text-muted">
-                    何%の可能性まで考慮するか。
+                    無リスク資産の年間利回り。通常は国債の利回りを使用します（例: 0.5%）
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>資産数</Form.Label>
+                  <Form.Control
+                    type="number"
+                    value={formData.numberOfAssets}
+                    onChange={handleChange('numberOfAssets')}
+                    min={MIN_ASSETS}
+                    max={MAX_ASSETS}
+                    step={1}
+                    required
+                  />
+                  <Form.Text className="text-muted">
+                    シミュレーションで使用するリスク資産の数（{MIN_ASSETS}〜{MAX_ASSETS}）
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>資産間の相関係数</Form.Label>
+                  <Form.Control
+                    type="number"
+                    value={formData.correlationCoefficient}
+                    onChange={handleChange('correlationCoefficient')}
+                    min={MIN_CORRELATION}
+                    max={MAX_CORRELATION}
+                    step={0.1}
+                    required
+                  />
+                  <Form.Text className="text-muted">
+                    資産間の価格変動の相関（-1: 完全逆相関、0: 無相関、1: 完全正相関）
                   </Form.Text>
                 </Form.Group>
               </Col>
@@ -268,10 +208,12 @@ export default function SettingsPage (): React.JSX.Element {
 
             <hr className="my-4" />
 
+            <h5 className="mb-3">マーケットポートフォリオのパラメータ</h5>
+
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>想定リターン (%/年)</Form.Label>
+                  <Form.Label>期待リターン (%/年)</Form.Label>
                   <Form.Control
                     type="number"
                     value={formData.expectedReturn}
@@ -280,16 +222,14 @@ export default function SettingsPage (): React.JSX.Element {
                     required
                   />
                   <Form.Text className="text-muted">
-                    年間の想定リターン率。
+                    マーケットポートフォリオの年間期待リターン（例: 7.5%）
                   </Form.Text>
                 </Form.Group>
               </Col>
-            </Row>
 
-            <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>想定リスク (標準偏差 %/年)</Form.Label>
+                  <Form.Label>リスク - 標準偏差 (%/年)</Form.Label>
                   <Form.Control
                     type="number"
                     value={formData.risk}
@@ -299,64 +239,28 @@ export default function SettingsPage (): React.JSX.Element {
                     required
                   />
                   <Form.Text className="text-muted">
-                    年間のボラティリティ (標準偏差)。
+                    マーケットポートフォリオの年間ボラティリティ（例: 18.0%）
                   </Form.Text>
                 </Form.Group>
               </Col>
             </Row>
 
-            <Card className="mb-4">
-              <Card.Header
-                onClick={() => { setIsAssetClassOpen(!isAssetClassOpen) }}
-                style={{ cursor: 'pointer' }}
-                className="d-flex justify-content-between align-items-center"
-              >
-                <h6 className="mb-0">代表的な資産クラスのリターンとリスク</h6>
-                {isAssetClassOpen ? <BsChevronUp /> : <BsChevronDown />}
-              </Card.Header>
-              <Collapse in={isAssetClassOpen}>
-                <Card.Body>
-                  <Table striped bordered hover responsive>
-                    <thead>
-                      <tr>
-                        <th>資産クラス</th>
-                        <th>想定リターン (%/年)</th>
-                        <th>想定リスク (%/年)</th>
-                        <th>操作</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {assetClasses.map((assetClass, index) => (
-                        <tr key={index}>
-                          <td>{assetClass.name}</td>
-                          <td>{assetClass.expectedReturn.toFixed(DECIMAL_ONE)}%</td>
-                          <td>{assetClass.risk.toFixed(DECIMAL_ONE)}%</td>
-                          <td>
-                            <Button
-                              variant="outline-primary"
-                              size="sm"
-                              onClick={() => { handleApplyAssetClass(assetClass) }}
-                            >
-                              適用
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                  <Form.Text className="text-muted">
-                    資産クラスを選択すると、その想定リターンとリスクがフォームに適用されます。
-                  </Form.Text>
-                </Card.Body>
-              </Collapse>
-            </Card>
+            <Alert variant="info" className="mt-3">
+              <Alert.Heading>参考値</Alert.Heading>
+              <ul className="mb-0">
+                <li><strong>世界株式</strong>: 期待リターン 7.5%、リスク 18.0%</li>
+                <li><strong>先進国株式</strong>: 期待リターン 7.0%、リスク 17.0%</li>
+                <li><strong>国内株式</strong>: 期待リターン 5.0%、リスク 15.0%</li>
+                <li><strong>リスクフリーレート</strong>: 日本国債 0.5%前後、米国債 4.0%前後（2024年時点）</li>
+              </ul>
+            </Alert>
 
-            <div className="d-flex gap-2">
+            <div className="d-flex gap-2 mt-4">
               <Button variant="primary" type="submit">
                 設定を保存
               </Button>
               <Button variant="secondary" type="button" onClick={handleResetClick}>
-                リセット
+                デフォルトに戻す
               </Button>
             </div>
           </Form>
@@ -367,15 +271,31 @@ export default function SettingsPage (): React.JSX.Element {
 
       <Card className="mt-4">
         <Card.Body>
-          <h5>現在の設定プレビュー</h5>
-          <ul className="mb-0">
-            <li>資産総額: {settings.totalAssets.toLocaleString()} 円</li>
-            <li>投資比率: {settings.investmentRatio}%</li>
-            <li>投資額: {savedInvestmentAmount.toLocaleString()} 円</li>
-            <li>確率閾値: {settings.probabilityThreshold}%</li>
-            <li>期待リターン: {settings.expectedReturn}% / 年</li>
-            <li>リスク: {settings.risk}% / 年</li>
-          </ul>
+          <h5 className="mb-3">現在の設定値</h5>
+          <Row>
+            <Col md={6}>
+              <ul>
+                <li>リスクフリーレート: <strong>{settings.riskFreeRate}%</strong></li>
+                <li>資産数: <strong>{settings.numberOfAssets}</strong></li>
+                <li>相関係数: <strong>{settings.correlationCoefficient}</strong></li>
+              </ul>
+            </Col>
+            <Col md={6}>
+              <ul>
+                <li>期待リターン: <strong>{settings.expectedReturn}%</strong></li>
+                <li>リスク: <strong>{settings.risk}%</strong></li>
+                <li>シャープレシオ: <strong>{sharpeRatio.toFixed(3)}</strong></li>
+              </ul>
+            </Col>
+          </Row>
+
+          <Alert variant="secondary" className="mt-3 mb-0">
+            <small>
+              <strong>シャープレシオ</strong> = (期待リターン - リスクフリーレート) / リスク
+              <br />
+              リスク1単位あたりの超過リターンを表す指標です。値が大きいほど効率的な投資です。
+            </small>
+          </Alert>
         </Card.Body>
       </Card>
 
